@@ -1,0 +1,1 @@
+Educational only; not financial advice. Markets are volatile; you may lose money. Past performance is not indicative of future results.
