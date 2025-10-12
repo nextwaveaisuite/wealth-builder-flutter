@@ -17,6 +17,7 @@ h2{margin:.1rem 0 .8rem 0;font-weight:900;letter-spacing:.2px}
 h3{margin:.2rem 0 .4rem 0;font-weight:800}
 .grid{display:grid;gap:14px}
 .grid.cols-2{grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
+.grid.cols-3{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
 .btn{display:inline-block;padding:10px 14px;border-radius:12px;border:2px solid var(--border);background:var(--bg-2);cursor:pointer;font-weight:800;box-shadow:0 2px 8px rgba(0,0,0,.04)}
 .btn:hover{filter:brightness(0.98)}
 .input{padding:12px;border-radius:12px;border:2px solid var(--border);width:100%;background:#fffaf1;font-weight:700}
@@ -25,9 +26,11 @@ small.muted{color:var(--muted);font-weight:600}
 .foot{padding:16px 18px;border-top:1px solid var(--border);color:var(--muted);text-align:center;margin-top:24px}
 
 /* Provider buttons */
-.providers{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
-.provider{display:flex;align-items:center;justify-content:center;gap:8px;padding:12px;border-radius:14px;border:2px solid var(--border);background:#fff;font-weight:900;box-shadow:var(--shadow)}
-.provider span.badge{font-size:12px;padding:4px 8px;border-radius:999px;border:1px solid var(--border);background:#fffaf1}
+.providers{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.provider{display:flex;flex-direction:column;align-items:flex-start;gap:8px;padding:14px;border-radius:14px;border:2px solid var(--border);background:#fff;font-weight:900;box-shadow:var(--shadow)}
+.provider .row{display:flex;gap:8px;align-items:center;justify-content:space-between;width:100%}
+.provider .badge{font-size:12px;padding:4px 8px;border-radius:999px;border:1px solid var(--border);background:#fffaf1}
+.provider .actions{display:flex;gap:8px}
 .provider.raiz{border-color:var(--raiz);color:#0b3d2f;background:linear-gradient(180deg,#e8fff7,#ffffff)}
 .provider.spaceship{border-color:var(--spaceship);color:#241b7a;background:linear-gradient(180deg,#efecff,#ffffff)}
 .provider.commsec{border-color:var(--commsec);color:#5a3d00;background:linear-gradient(180deg,#fff6d6,#ffffff)}
@@ -42,6 +45,18 @@ small.muted{color:var(--muted);font-weight:600}
 .gain{color:#0a7a3d}
 .loss{color:#b20d2e}
 
-/* Chart wrappers: keep canvas clean to avoid resize loops */
+/* Chart wrappers (avoid resize loop) */
 .chartwrap{background:#fff;border:2px solid var(--border);border-radius:12px;padding:8px;box-shadow:var(--shadow)}
 .chartwrap canvas{display:block;width:100%!important;height:260px!important}
+
+/* KPIs & progress */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.kpi{border:2px solid var(--border);border-radius:14px;background:#fff;padding:12px;box-shadow:var(--shadow)}
+.kpi .label{color:var(--muted);font-size:12px}
+.kpi .value{font-size:22px;font-weight:900}
+.progress{height:10px;border-radius:999px;background:#f1e6d3;border:1px solid var(--border);overflow:hidden}
+.progress > span{display:block;height:100%;background:linear-gradient(90deg,#3ba776,#7cd67c)}
+.pill{display:inline-block;padding:4px 8px;border-radius:999px;border:1px solid var(--border);background:#fffaf1;font-size:12px;font-weight:800}
+.pill.on{background:#e9f9ef;border-color:#bce8c7;color:#0a7a3d}
+.pill.off{background:#fff3f5;border-color:#f4c2cb;color:#b20d2e}
+
