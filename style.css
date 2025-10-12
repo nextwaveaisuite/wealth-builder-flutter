@@ -1,0 +1,17 @@
+*{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,Segoe UI,Arial}
+.topbar{display:flex;flex-wrap:wrap;align-items:center;gap:12px;padding:10px 16px;background:linear-gradient(90deg,#0f6efa,#103a9b);color:#fff}
+.topbar h1{font-size:18px;margin:0;font-weight:800}
+.topbar nav a{color:#fff;text-decoration:none;margin-right:10px;opacity:.9}
+.topbar nav a:hover{opacity:1;text-decoration:underline}
+.container{max-width:960px;margin:20px auto;padding:0 16px}
+.card{background:#fff;border:1px solid #e6e8ee;border-radius:12px;padding:16px;box-shadow:0 1px 2px rgba(0,0,0,.04);margin-bottom:14px}
+h2{margin:.2rem 0 0.6rem 0}
+.grid{display:grid;gap:12px}
+.grid.cols-2{grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
+.btn{display:inline-block;padding:10px 14px;border-radius:10px;border:1px solid #d0d7ff;background:#f2f6ff;cursor:pointer}
+.btn:hover{background:#e6eeff}
+.input{padding:10px;border-radius:10px;border:1px solid #d0d7ff;width:100%}
+.banner{padding:12px;border-radius:10px;background:#eef5ff;border:1px solid #d0d7ff;text-align:center}
+.legal a{display:block;margin:8px 0}
+small.muted{color:#667085}
+.foot{padding:14px 16px;border-top:1px solid #eee;color:#667085;text-align:center;margin-top:24px}
