@@ -1,5 +1,5 @@
-// Wealth Builder — Static SPA with charts and upgraded UI
-// FIX: chart canvases wrapped to avoid Chart.js resize loop.
+// Wealth Builder — Static SPA with polished Autopilot & Execute
+// Uses Chart.js for charts; no backend except optional Stripe endpoints.
 
 const el = (s) => document.querySelector(s);
 const app = el('#app');
@@ -151,58 +151,192 @@ async function renderPortfolio(){
   }).join('');
 }
 
-// ---------- AUTOPILOT ----------
+// ---------- AUTOPILOT (polished) ----------
 async function renderAutopilot(){
   killCharts();
   const rules = await loadJSON('/assets/rules.json');
   const loss = await loadJSON('/assets/loss_guard.json');
   const radar = await loadJSON('/assets/radar.json');
+
+  const nextRun = 'Fri 10:00am';
+  const dcaOn = true;
+  const radarOn = true;
+  const guardActive = false; // demo flag
+
   app.innerHTML = `
     <div class="card">
-      <h2>Autopilot</h2>
-      <div>Schedule: Weekly • DCA <b>ON</b> • Radar <b>ON</b></div>
-      <hr/>
+      <h2>Autopilot — Status & Controls</h2>
+
+      <div class="kpis">
+        <div class="kpi">
+          <div class="label">Next Run</div>
+          <div class="value">${nextRun}</div>
+          <div class="label">Cadence</div>
+          <div class="pill on">Weekly</div>
+        </div>
+
+        <div class="kpi">
+          <div class="label">DCA</div>
+          <div class="value">${dcaOn ? 'ON' : 'OFF'}</div>
+          <div class="progress" title="Target funding this cycle">
+            <span style="width: 68%"></span>
+          </div>
+          <small class="muted">~$34 of $50 planned</small>
+        </div>
+
+        <div class="kpi">
+          <div class="label">Radar Tilts</div>
+          <div class="value">${radarOn ? 'ON' : 'OFF'}</div>
+          <div class="label">Monthly cap used</div>
+          <div class="progress"><span style="width: 25%"></span></div>
+          <small class="muted">$20 / $80</small>
+        </div>
+
+        <div class="kpi">
+          <div class="label">Loss Guard</div>
+          <div class="value">${guardActive ? 'BRAKE' : 'NORMAL'}</div>
+          <div class="pill ${guardActive ? 'off' : 'on'}">${guardActive ? 'Growth paused' : 'Routing normal'}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
       <h3>Targets (Balanced)</h3>
-      <div>Growth: ${Math.round(rules.risk_bands.balanced.growth*100)}% · Safety: ${Math.round(rules.risk_bands.balanced.safety*100)}%</div>
-      <h3>Guardrails</h3>
-      <ul>
-        <li>Weekly brake: ${loss.weekly_brake_drop_pct}%</li>
-        <li>Safety floor: ${Math.round(loss.safety_floor*100)}%</li>
-        <li>Max growth overweight: ${Math.round(loss.max_growth_overweight*100)}%</li>
-      </ul>
-      <h3>Radar caps</h3>
-      <ul>
-        <li>Max actions/week: ${radar.max_actions_per_week}</li>
-        <li>Monthly extra cap: ~$${radar.monthly_extra_cap}</li>
-      </ul>
+      <div class="tiles">
+        <div class="tile">
+          <div class="hdr"><span>Growth Sleeve</span><span class="badge-pill">TARGET</span></div>
+          <div class="value" style="font-size:20px;font-weight:900">${Math.round(rules.risk_bands.balanced.growth*100)}%</div>
+          <small class="muted">VAS / VGS / IVV (fee-weighted)</small>
+        </div>
+        <div class="tile">
+          <div class="hdr"><span>Safety Sleeve</span><span class="badge-pill">TARGET</span></div>
+          <div class="value" style="font-size:20px;font-weight:900">${Math.round(rules.risk_bands.balanced.safety*100)}%</div>
+          <small class="muted">VAF / GOLD</small>
+        </div>
+        <div class="tile">
+          <div class="hdr"><span>Guardrails</span><span class="badge-pill">ACTIVE</span></div>
+          <ul style="margin:0;padding-left:18px">
+            <li>Weekly brake: ${loss.weekly_brake_drop_pct}%</li>
+            <li>Safety floor: ${Math.round(loss.safety_floor*100)}%</li>
+            <li>Max growth overweight: ${Math.round(loss.max_growth_overweight*100)}%</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Schedule & Controls</h3>
+      <div class="grid cols-3">
+        <div class="tile">
+          <div class="hdr"><span>Cadence</span></div>
+          <select class="input" id="cadence">
+            <option selected>Weekly</option>
+            <option>Fortnightly</option>
+            <option>Monthly</option>
+          </select>
+        </div>
+        <div class="tile">
+          <div class="hdr"><span>DCA</span></div>
+          <button class="btn" id="toggleDCA">${dcaOn ? 'Turn OFF' : 'Turn ON'}</button>
+          <small class="muted">Dollar-cost averaging engine</small>
+        </div>
+        <div class="tile">
+          <div class="hdr"><span>Radar</span></div>
+          <button class="btn" id="toggleRadar">${radarOn ? 'Turn OFF' : 'Turn ON'}</button>
+          <small class="muted">Tiny opportunity tilts (capped)</small>
+        </div>
+      </div>
+      <div style="margin-top:10px">
+        <button class="btn" id="saveAuto">Save Settings</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>This Cycle Preview</h3>
+      <div class="tiles">
+        <div class="tile">
+          <div class="hdr"><span>Growth</span><span class="badge-pill">PLAN</span></div>
+          <div>VAS + VGS + IVV micro-buys to reduce drift</div>
+        </div>
+        <div class="tile">
+          <div class="hdr"><span>Safety</span><span class="badge-pill">PLAN</span></div>
+          <div>Maintain ≥ ${Math.round(loss.safety_floor*100)}% floor via VAF / GOLD</div>
+        </div>
+        <div class="tile">
+          <div class="hdr"><span>Radar Tilt</span><span class="badge-pill">CAP $${radar.monthly_extra_cap}</span></div>
+          <div>Macro stress → +$10 to Safety</div>
+        </div>
+      </div>
     </div>
   `;
+
+  el('#saveAuto').onclick = () => alert('Saved Autopilot settings (demo).');
+  el('#toggleDCA').onclick = () => alert('Toggled DCA (demo).');
+  el('#toggleRadar').onclick = () => alert('Toggled Radar (demo).');
 }
 
-// ---------- EXECUTE ----------
+// ---------- EXECUTE (polished) ----------
 async function renderExecute(){
   killCharts();
   app.innerHTML = `
     <div class="card">
-      <h2>Execute (Deep Links)</h2>
+      <h2>Execute — Your Providers</h2>
       <div class="providers">
-        <button class="provider raiz" onclick="window.open('https://www.raizinvest.com.au/','_blank')">
-          RAIZ <span class="badge">Growth Bundle</span>
-        </button>
-        <button class="provider spaceship" onclick="window.open('https://www.spaceship.com.au/','_blank')">
-          SPACESHIP <span class="badge">Global</span>
-        </button>
-        <button class="provider commsec" onclick="window.open('https://www.commsec.com.au/','_blank')">
-          COMMSEC POCKET <span class="badge">ETF</span>
-        </button>
-        <button class="provider stockspot" onclick="window.open('https://www.stockspot.com.au/','_blank')">
-          STOCKSPOT <span class="badge">Managed</span>
-        </button>
-        <button class="provider quietgrowth" onclick="window.open('https://www.quietgrowth.com.au/','_blank')">
-          QUIETGROWTH <span class="badge">Managed</span>
-        </button>
+        <div class="provider raiz">
+          <div class="row"><strong>RAIZ</strong><span class="badge">Growth Bundle</span></div>
+          <div class="row"><small class="muted">Micro-investing app with round-ups and recurring.</small></div>
+          <div class="actions">
+            <button class="btn" onclick="window.open('https://www.raizinvest.com.au/','_blank')">Open</button>
+            <button class="btn" onclick="window.open('https://www.raizinvest.com.au/help/','_blank')">Learn</button>
+          </div>
+        </div>
+
+        <div class="provider spaceship">
+          <div class="row"><strong>SPACESHIP</strong><span class="badge">Global</span></div>
+          <div class="row"><small class="muted">Managed portfolios focused on global growth themes.</small></div>
+          <div class="actions">
+            <button class="btn" onclick="window.open('https://www.spaceship.com.au/','_blank')">Open</button>
+            <button class="btn" onclick="window.open('https://www.spaceship.com.au/support','_blank')">Learn</button>
+          </div>
+        </div>
+
+        <div class="provider commsec">
+          <div class="row"><strong>COMMSEC POCKET</strong><span class="badge">ETF</span></div>
+          <div class="row"><small class="muted">Direct ETF buying via themed “pockets”.</small></div>
+          <div class="actions">
+            <button class="btn" onclick="window.open('https://www.commsec.com.au/','_blank')">Open</button>
+            <button class="btn" onclick="window.open('https://www.commsec.com.au/support/','_blank')">Learn</button>
+          </div>
+        </div>
+
+        <div class="provider stockspot">
+          <div class="row"><strong>STOCKSPOT</strong><span class="badge">Managed</span></div>
+          <div class="row"><small class="muted">Automated ETF portfolios rebalanced for you.</small></div>
+          <div class="actions">
+            <button class="btn" onclick="window.open('https://www.stockspot.com.au/','_blank')">Open</button>
+            <button class="btn" onclick="window.open('https://www.stockspot.com.au/faq/','_blank')">Learn</button>
+          </div>
+        </div>
+
+        <div class="provider quietgrowth">
+          <div class="row"><strong>QUIETGROWTH</strong><span class="badge">Managed</span></div>
+          <div class="row"><small class="muted">Digital advice and ETF portfolios (risk-based).</small></div>
+          <div class="actions">
+            <button class="btn" onclick="window.open('https://www.quietgrowth.com.au/','_blank')">Open</button>
+            <button class="btn" onclick="window.open('https://www.quietgrowth.com.au/faq','_blank')">Learn</button>
+          </div>
+        </div>
       </div>
       <p><small class="muted">You execute at your chosen provider. No custody in this app.</small></p>
+    </div>
+
+    <div class="card">
+      <h3>Tips</h3>
+      <ul>
+        <li>Use the Withdraw tab to create a CSV sell plan if you need cash.</li>
+        <li>Keep contributions small and steady; rely on the Autopilot to rebalance.</li>
+        <li>Don’t chase; the Radar tilts are capped so the long-term plan dominates.</li>
+      </ul>
     </div>
   `;
 }
@@ -329,3 +463,4 @@ function router(){
 }
 addEventListener('hashchange', router);
 addEventListener('load', router);
+
