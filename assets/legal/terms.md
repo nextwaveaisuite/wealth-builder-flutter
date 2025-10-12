@@ -1,1 +1,0 @@
-General information only. You are responsible for investment decisions. No custody of funds; execution occurs at your chosen provider. Use constitutes acceptance of these Terms.

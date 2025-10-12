@@ -1,1 +1,0 @@
-We collect minimal, anonymous telemetry (app opens, plan runs). We do not store broker credentials or route orders. Contact: support@example.com.
