@@ -1,4 +1,4 @@
-// Wealth Builder — Static SPA with FAQ + compliant footer links
+// Wealth Builder — Static SPA with FAQ + footer + routes
 
 const el = (s) => document.querySelector(s);
 const app = el('#app');
@@ -412,14 +412,13 @@ async function renderSettings(){
   `;
 }
 
-// ---------- FAQ / HOW-TO ----------
+// ---------- FAQ ----------
 async function renderFAQ(){
   killCharts();
   app.innerHTML = `
     <div class="card">
       <h2>FAQ & How to Use</h2>
       <div class="faq">
-
         <details open>
           <summary>Quick Start — 5 steps</summary>
           <ol>
@@ -434,23 +433,23 @@ async function renderFAQ(){
 
         <details>
           <summary>What does Autopilot actually do?</summary>
-          <p>On each cycle, it splits your contribution to pull the portfolio back toward the target mix (e.g., 70/30). Within each sleeve, lower-fee ETFs get priority. Radar adds tiny extra buys when conditions look favorable, but caps stop it from dominating.</p>
+          <p>Each cycle it splits your contribution back toward target (e.g., 70/30). Within sleeves, lower-fee ETFs get priority. Radar adds tiny extra buys when conditions look favorable, capped so it never dominates.</p>
         </details>
 
         <details>
           <summary>How do I buy or sell?</summary>
-          <p>We don’t place orders. Use <strong>Execute</strong> to open your provider (Raiz, Spaceship, CommSec Pocket, Stockspot, QuietGrowth). For selling, use <strong>Withdraw</strong> to generate a safety-first CSV plan, then execute at your provider.</p>
+          <p>We don’t place orders. Use <strong>Execute</strong> to open your provider (Raiz, Spaceship, CommSec Pocket, Stockspot, QuietGrowth). For selling, use <strong>Withdraw</strong> to create a safety-first CSV plan, then execute at your provider.</p>
         </details>
 
         <details>
           <summary>Is this financial advice?</summary>
-          <p>No. This app provides general information and automation logic only. It does not consider your personal objectives, financial situation, or needs. Consider seeking independent advice.</p>
+          <p>No. General information only; does not consider your objectives, financial situation or needs. Consider seeking independent advice.</p>
         </details>
 
         <details>
-          <summary>What are the default guardrails?</summary>
+          <summary>Default guardrails</summary>
           <ul>
-            <li>Weekly brake around −5% → pause new growth and route to safety.</li>
+            <li>Weekly brake ~−5% → pause new growth and route to safety.</li>
             <li>Safety floor (e.g., ≥30%).</li>
             <li>Growth overweight cap (e.g., +7% over target).</li>
             <li>Radar monthly extra cap (~$80).</li>
@@ -458,15 +457,9 @@ async function renderFAQ(){
         </details>
 
         <details>
-          <summary>How do withdrawals work?</summary>
-          <p>Enter an amount on <strong>Withdraw</strong>. The app proposes sells from the safety sleeve first (VAF/GOLD) and exports a CSV. You place the orders at your provider; settlement is typically T+2.</p>
+          <summary>Withdrawals</summary>
+          <p>Enter an amount in <strong>Withdraw</strong>. The app prefers VAF/GOLD first and exports a CSV. Place the sell at your provider; settlement typically T+2.</p>
         </details>
-
-        <details>
-          <summary>Can I connect broker APIs?</summary>
-          <p>Phase 2 will add read-only holding imports and, later, execution via a licensed partner. For now, use deep links and CSVs.</p>
-        </details>
-
       </div>
     </div>
 
@@ -478,10 +471,10 @@ async function renderFAQ(){
         <li><strong>Autopilot:</strong> Status, guardrails, cadence, Radar caps, save controls.</li>
         <li><strong>Execute:</strong> Open your provider or read their help.</li>
         <li><strong>Withdraw:</strong> Safety-first sell plan + CSV export.</li>
-        <li><strong>Settings:</strong> Risk band, contribution, and (when enabled) billing status.</li>
+        <li><strong>Settings:</strong> Risk band & contribution (billing when enabled).</li>
         <li><strong>Legal:</strong> Privacy, Terms, Disclaimer, About, Contact.</li>
       </ul>
-      <p class="muted">Plain-English policies are included for Australia; this is not legal or financial advice.</p>
+      <p class="muted">Policies are AU-aligned drafts; get independent legal review before launch.</p>
     </div>
   `;
 }
@@ -492,7 +485,7 @@ async function renderLegal(){
   app.innerHTML = `
     <div class="card legal">
       <h2>Legal</h2>
-      <p class="muted">These pages are plain-English Australian drafts. They are general in nature and not legal advice. Consider obtaining independent legal review before launch.</p>
+      <p class="muted">Plain-English Australian drafts (general info only).</p>
       <a href="/legal/privacy.html" target="_blank">Privacy Policy (Australia — APP-aligned draft)</a>
       <a href="/legal/terms.html" target="_blank">Terms of Service</a>
       <a href="/legal/disclaimer.html" target="_blank">General Advice & Risk Disclaimer</a>
