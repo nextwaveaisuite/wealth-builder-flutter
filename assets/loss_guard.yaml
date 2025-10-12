@@ -1,0 +1,4 @@
+weekly_brake_drop_pct: -5
+safety_floor: 0.30
+max_growth_overweight: 0.07
+reroute_targets: [ 'VAF.AX', 'GOLD.AX' ]

@@ -1,0 +1,30 @@
+name: wealth_builder
+description: Flutter web starter for Wealth Builder (CI → Vercel)
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ">=3.4.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  go_router: ^14.2.3
+  url_launcher: ^6.3.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/universe.json
+    - assets/rules.yaml
+    - assets/loss_guard.yaml
+    - assets/radar.yaml
+    - assets/legal/privacy.md
+    - assets/legal/terms.md
+    - assets/legal/disclaimer.md
+    - assets/legal/about.md
+    - assets/legal/contact.md

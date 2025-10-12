@@ -1,0 +1,4 @@
+max_actions_per_week: 2
+monthly_extra_cap: 80
+stress_threshold: 0.65
+momentum_threshold: 0.60
