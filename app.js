@@ -1,4 +1,6 @@
-// Simple hash router
+// Wealth Builder — Static SPA (no framework)
+// Routing: hash-based; assets loaded from /assets/*.json
+
 const el = (sel) => document.querySelector(sel);
 const app = el('#app');
 
@@ -10,11 +12,13 @@ const routes = {
   '/withdraw': renderWithdraw,
   '/settings': renderSettings,
   '/legal': renderLegal,
+  '/billing': renderBilling, // software subscription (Stripe Checkout)
 };
 
-async function loadJSON(path){ const r = await fetch(path, {cache:'no-store'}); return r.json(); }
+async function loadJSON(path){ const r = await fetch(path, { cache: 'no-store' }); return r.json(); }
 
-// ---------- VIEWS ----------
+// ---------------- VIEWS ----------------
+
 async function renderHome(){
   let dipOn = JSON.parse(localStorage.getItem('dipOn') || 'true');
   let dipCap = parseInt(localStorage.getItem('dipCap') || '80', 10);
@@ -28,7 +32,7 @@ async function renderHome(){
     <div class="card">
       <h2>Right Now Tilt</h2>
       <div>Macro stress elevated → route +$10 to Safety (VAF/GOLD)</div>
-      <div style="margin-top:8px; display:flex; gap:8px; align-items:center;">
+      <div style="margin-top:8px; display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
         <label><input id="dip" type="checkbox" ${dipOn ? 'checked' : ''}/> Buy the Dip</label>
         <span>Cap ($/month)</span>
         <input id="cap" class="input" style="max-width:120px" value="${dipCap}" />
@@ -125,7 +129,7 @@ async function renderWithdraw(){
     const v = parseFloat(el('#amt').value || '0');
     if(!v || v<=0){ el('#plan').innerHTML = '<small class="muted">Enter a valid amount.</small>'; return; }
 
-    // Simple safety-first plan example (edit later as needed)
+    // Simple safety-first split example
     const vaf = Math.max(50, Math.round(v * 0.6));
     const gold = Math.max(0, Math.round(v - vaf));
 
@@ -181,7 +185,31 @@ async function renderLegal(){
   `;
 }
 
-// ---------- ROUTER ----------
+async function renderBilling(){
+  app.innerHTML = `
+    <div class="card">
+      <h2>Billing (Software Access)</h2>
+      <p>Subscribe to unlock pro features. This payment is for software access only — <b>not</b> for investing or funding a brokerage account.</p>
+      <button class="btn" id="buy">Subscribe with Stripe</button>
+      <p><small class="muted">We never see your card. Stripe handles all payment and PCI compliance.</small></p>
+    </div>
+  `;
+  el('#buy').onclick = async () => {
+    try {
+      const res = await fetch('/api/checkout', { method: 'POST' });
+      const data = await res.json();
+      if (data && data.url) {
+        location.href = data.url;
+      } else {
+        alert('Checkout init failed.');
+      }
+    } catch (e) {
+      alert('Network error starting checkout.');
+    }
+  };
+}
+
+// ---------------- ROUTER ----------------
 function router(){
   const hash = location.hash.replace('#','') || '/home';
   const view = routes[hash] || renderHome;
