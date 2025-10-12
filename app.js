@@ -1,5 +1,4 @@
-// Wealth Builder — Static SPA with polished Autopilot & Execute
-// Uses Chart.js for charts; no backend except optional Stripe endpoints.
+// Wealth Builder — Static SPA with FAQ + compliant footer links
 
 const el = (s) => document.querySelector(s);
 const app = el('#app');
@@ -12,6 +11,7 @@ const routes = {
   '/execute': renderExecute,
   '/withdraw': renderWithdraw,
   '/settings': renderSettings,
+  '/faq': renderFAQ,
   '/legal': renderLegal,
   '/billing': renderBilling,
 };
@@ -151,7 +151,7 @@ async function renderPortfolio(){
   }).join('');
 }
 
-// ---------- AUTOPILOT (polished) ----------
+// ---------- AUTOPILOT ----------
 async function renderAutopilot(){
   killCharts();
   const rules = await loadJSON('/assets/rules.json');
@@ -161,12 +161,11 @@ async function renderAutopilot(){
   const nextRun = 'Fri 10:00am';
   const dcaOn = true;
   const radarOn = true;
-  const guardActive = false; // demo flag
+  const guardActive = false;
 
   app.innerHTML = `
     <div class="card">
       <h2>Autopilot — Status & Controls</h2>
-
       <div class="kpis">
         <div class="kpi">
           <div class="label">Next Run</div>
@@ -174,24 +173,19 @@ async function renderAutopilot(){
           <div class="label">Cadence</div>
           <div class="pill on">Weekly</div>
         </div>
-
         <div class="kpi">
           <div class="label">DCA</div>
           <div class="value">${dcaOn ? 'ON' : 'OFF'}</div>
-          <div class="progress" title="Target funding this cycle">
-            <span style="width: 68%"></span>
-          </div>
+          <div class="progress" title="Target funding this cycle"><span style="width:68%"></span></div>
           <small class="muted">~$34 of $50 planned</small>
         </div>
-
         <div class="kpi">
           <div class="label">Radar Tilts</div>
           <div class="value">${radarOn ? 'ON' : 'OFF'}</div>
           <div class="label">Monthly cap used</div>
-          <div class="progress"><span style="width: 25%"></span></div>
+          <div class="progress"><span style="width:25%"></span></div>
           <small class="muted">$20 / $80</small>
         </div>
-
         <div class="kpi">
           <div class="label">Loss Guard</div>
           <div class="value">${guardActive ? 'BRAKE' : 'NORMAL'}</div>
@@ -275,7 +269,7 @@ async function renderAutopilot(){
   el('#toggleRadar').onclick = () => alert('Toggled Radar (demo).');
 }
 
-// ---------- EXECUTE (polished) ----------
+// ---------- EXECUTE ----------
 async function renderExecute(){
   killCharts();
   app.innerHTML = `
@@ -418,13 +412,88 @@ async function renderSettings(){
   `;
 }
 
+// ---------- FAQ / HOW-TO ----------
+async function renderFAQ(){
+  killCharts();
+  app.innerHTML = `
+    <div class="card">
+      <h2>FAQ & How to Use</h2>
+      <div class="faq">
+
+        <details open>
+          <summary>Quick Start — 5 steps</summary>
+          <ol>
+            <li>Open <strong>Settings</strong> → choose <em>Conservative / Balanced / Growth</em>.</li>
+            <li>Set your small, regular <strong>Contribution</strong> (e.g., $5–$25/week).</li>
+            <li>Go to <strong>Autopilot</strong> → leave DCA ON and Radar ON (defaults).</li>
+            <li>Check <strong>Portfolio</strong> for your growth vs safety mix and planned buys.</li>
+            <li>When ready to act, open <strong>Execute</strong> and use your chosen provider.</li>
+          </ol>
+          <p class="muted">Tip: Keep contributions tiny and steady. Loss Guard floors and caps help keep things sensible.</p>
+        </details>
+
+        <details>
+          <summary>What does Autopilot actually do?</summary>
+          <p>On each cycle, it splits your contribution to pull the portfolio back toward the target mix (e.g., 70/30). Within each sleeve, lower-fee ETFs get priority. Radar adds tiny extra buys when conditions look favorable, but caps stop it from dominating.</p>
+        </details>
+
+        <details>
+          <summary>How do I buy or sell?</summary>
+          <p>We don’t place orders. Use <strong>Execute</strong> to open your provider (Raiz, Spaceship, CommSec Pocket, Stockspot, QuietGrowth). For selling, use <strong>Withdraw</strong> to generate a safety-first CSV plan, then execute at your provider.</p>
+        </details>
+
+        <details>
+          <summary>Is this financial advice?</summary>
+          <p>No. This app provides general information and automation logic only. It does not consider your personal objectives, financial situation, or needs. Consider seeking independent advice.</p>
+        </details>
+
+        <details>
+          <summary>What are the default guardrails?</summary>
+          <ul>
+            <li>Weekly brake around −5% → pause new growth and route to safety.</li>
+            <li>Safety floor (e.g., ≥30%).</li>
+            <li>Growth overweight cap (e.g., +7% over target).</li>
+            <li>Radar monthly extra cap (~$80).</li>
+          </ul>
+        </details>
+
+        <details>
+          <summary>How do withdrawals work?</summary>
+          <p>Enter an amount on <strong>Withdraw</strong>. The app proposes sells from the safety sleeve first (VAF/GOLD) and exports a CSV. You place the orders at your provider; settlement is typically T+2.</p>
+        </details>
+
+        <details>
+          <summary>Can I connect broker APIs?</summary>
+          <p>Phase 2 will add read-only holding imports and, later, execution via a licensed partner. For now, use deep links and CSVs.</p>
+        </details>
+
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Navigation Guide</h3>
+      <ul>
+        <li><strong>Home:</strong> Next Order Plan, current Radar tilt, wealth curve.</li>
+        <li><strong>Portfolio:</strong> Growth vs Safety pie, planned buys, ETF performance.</li>
+        <li><strong>Autopilot:</strong> Status, guardrails, cadence, Radar caps, save controls.</li>
+        <li><strong>Execute:</strong> Open your provider or read their help.</li>
+        <li><strong>Withdraw:</strong> Safety-first sell plan + CSV export.</li>
+        <li><strong>Settings:</strong> Risk band, contribution, and (when enabled) billing status.</li>
+        <li><strong>Legal:</strong> Privacy, Terms, Disclaimer, About, Contact.</li>
+      </ul>
+      <p class="muted">Plain-English policies are included for Australia; this is not legal or financial advice.</p>
+    </div>
+  `;
+}
+
 // ---------- LEGAL ----------
 async function renderLegal(){
   killCharts();
   app.innerHTML = `
     <div class="card legal">
       <h2>Legal</h2>
-      <a href="/legal/privacy.html" target="_blank">Privacy Policy</a>
+      <p class="muted">These pages are plain-English Australian drafts. They are general in nature and not legal advice. Consider obtaining independent legal review before launch.</p>
+      <a href="/legal/privacy.html" target="_blank">Privacy Policy (Australia — APP-aligned draft)</a>
       <a href="/legal/terms.html" target="_blank">Terms of Service</a>
       <a href="/legal/disclaimer.html" target="_blank">General Advice & Risk Disclaimer</a>
       <a href="/legal/about.html" target="_blank">About</a>
@@ -463,4 +532,3 @@ function router(){
 }
 addEventListener('hashchange', router);
 addEventListener('load', router);
-
