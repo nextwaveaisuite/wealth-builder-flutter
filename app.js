@@ -1,5 +1,6 @@
 // Wealth Builder — Static SPA (no framework)
 // Routing: hash-based; assets loaded from /assets/*.json
+// Includes: Billing via Stripe Checkout, Settings detects session_id → verifies → stores Pro
 
 const el = (sel) => document.querySelector(sel);
 const app = el('#app');
@@ -10,9 +11,9 @@ const routes = {
   '/autopilot': renderAutopilot,
   '/execute': renderExecute,
   '/withdraw': renderWithdraw,
-  '/settings': renderSettings,
+  '/settings': renderSettings, // detects session_id, verifies, stores Pro
   '/legal': renderLegal,
-  '/billing': renderBilling, // software subscription (Stripe Checkout)
+  '/billing': renderBilling,   // software subscription (Stripe Checkout)
 };
 
 async function loadJSON(path){ const r = await fetch(path, { cache: 'no-store' }); return r.json(); }
@@ -151,9 +152,35 @@ async function renderWithdraw(){
 }
 
 async function renderSettings(){
+  // Detect Stripe redirect (?session_id=...) inside the hash, e.g. #/settings?session_id=cs_...
+  const rawHash = location.hash || '';
+  const qp = rawHash.includes('?') ? rawHash.split('?')[1] : '';
+  const params = new URLSearchParams(qp);
+  const sid = params.get('session_id');
+
+  let pro = JSON.parse(localStorage.getItem('pro') || 'false');
+  let message = '';
+
+  if (sid) {
+    try {
+      const res = await fetch(`/api/session-status?session_id=${encodeURIComponent(sid)}`);
+      const data = await res.json();
+      if (data && (data.status === 'active' || data.status === 'trialing')) {
+        pro = true;
+        localStorage.setItem('pro', 'true');
+        message = '✅ Pro subscription active.';
+      } else {
+        message = '⚠️ Subscription not active yet.';
+      }
+    } catch {
+      message = '⚠️ Could not verify subscription.';
+    }
+  }
+
   app.innerHTML = `
     <div class="card">
-      <h2>Settings</h2>
+      <h2>Settings ${pro ? '<span style="font-size:0.6em;color:#0a7">• PRO</span>' : ''}</h2>
+      ${message ? `<p><small class="muted">${message}</small></p>` : ''}
       <div class="grid cols-2">
         <div>
           <h3>Risk Band</h3>
@@ -168,6 +195,8 @@ async function renderSettings(){
           <input class="input" placeholder="$50 / week" />
         </div>
       </div>
+      <hr/>
+      <p><small class="muted">Billing is for software access only — not investing or funding.</small></p>
     </div>
   `;
 }
@@ -212,7 +241,7 @@ async function renderBilling(){
 // ---------------- ROUTER ----------------
 function router(){
   const hash = location.hash.replace('#','') || '/home';
-  const view = routes[hash] || renderHome;
+  const view = routes[hash.split('?')[0]] || renderHome; // strip query
   view();
 }
 window.addEventListener('hashchange', router);
