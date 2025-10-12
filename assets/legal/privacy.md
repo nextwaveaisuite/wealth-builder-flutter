@@ -1,1 +1,0 @@
-We collect minimal, anonymous telemetry. No custody or order routing in MVP. Contact: support@example.com.

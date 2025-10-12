@@ -1,1 +1,0 @@
-General information only; not financial advice. Markets are volatile; capital at risk.

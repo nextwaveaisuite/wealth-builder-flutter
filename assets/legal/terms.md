@@ -1,1 +1,0 @@
-Use at your own risk. Educational use; no financial advice. Execution occurs at your chosen provider.
