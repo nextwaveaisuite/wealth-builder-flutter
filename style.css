@@ -52,7 +52,7 @@ small.muted{color:var(--muted);font-weight:600}
 .gain{color:#0a7a3d}
 .loss{color:#b20d2e}
 
-/* Chart wrappers (avoid resize loop) */
+/* Chart wrappers */
 .chartwrap{background:#fff;border:2px solid var(--border);border-radius:12px;padding:8px;box-shadow:var(--shadow)}
 .chartwrap canvas{display:block;width:100%!important;height:260px!important}
 
@@ -74,4 +74,3 @@ small.muted{color:var(--muted);font-weight:600}
 }
 .faq summary{cursor:pointer; font-weight:900}
 .faq p, .faq ul{margin:.5rem 0}
-
