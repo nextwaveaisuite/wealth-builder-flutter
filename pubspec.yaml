@@ -1,5 +1,5 @@
 name: wealth_builder
-description: Flutter web starter for Wealth Builder (CI → Vercel)
+description: Flutter web starter (CI → Vercel)
 publish_to: 'none'
 version: 1.0.0+1
 
