@@ -1,10 +1,9 @@
 // Wealth Builder — Static SPA with charts and upgraded UI
-// Hash router; assets from /assets/*.json; mock price series in /assets/prices.json
-// Billing via Stripe Checkout (optional), Pro flag stored in localStorage
+// FIX: chart canvases wrapped to avoid Chart.js resize loop.
 
 const el = (s) => document.querySelector(s);
 const app = el('#app');
-let charts = []; // track Chart.js instances to destroy between views
+let charts = [];
 
 const routes = {
   '/home': renderHome,
@@ -20,8 +19,7 @@ const routes = {
 async function loadJSON(path){ const r = await fetch(path, { cache: 'no-store' }); return r.json(); }
 function killCharts(){ charts.forEach(c=>c.destroy()); charts=[]; }
 
-// ---------------- VIEWS ----------------
-
+// ---------- HOME ----------
 async function renderHome(){
   killCharts();
   let dipOn = JSON.parse(localStorage.getItem('dipOn') || 'true');
@@ -47,7 +45,7 @@ async function renderHome(){
 
     <div class="card">
       <h2>Wealth Build (Cumulative)</h2>
-      <canvas id="wealthLine" height="120"></canvas>
+      <div class="chartwrap"><canvas id="wealthLine"></canvas></div>
       <small class="muted">Demo curve showing growing contributions + hypothetical gains.</small>
     </div>
 
@@ -60,15 +58,9 @@ async function renderHome(){
     alert('Saved.');
   };
 
-  // Simple illustrative wealth curve (no live pricing)
   const labels = Array.from({length: 12}, (_,i)=>`M${i+1}`);
-  let contrib = 50 * 4; // $/month
-  let total = 0, data = [];
-  for (let i=0;i<labels.length;i++){
-    total += contrib;
-    total *= 1.01; // +1% monthly illustrative growth
-    data.push(Math.round(total));
-  }
+  let contrib = 50 * 4, total = 0, data = [];
+  for (let i=0;i<labels.length;i++){ total += contrib; total *= 1.01; data.push(Math.round(total)); }
   const ctx = document.getElementById('wealthLine');
   charts.push(new Chart(ctx, {
     type:'line',
@@ -77,11 +69,11 @@ async function renderHome(){
   }));
 }
 
+// ---------- PORTFOLIO ----------
 async function renderPortfolio(){
   killCharts();
   const uni = await loadJSON('/assets/universe.json');
   const prices = await loadJSON('/assets/prices.json');
-
   const alloc = { growth: 0.7, safety: 0.3 };
 
   app.innerHTML = `
@@ -90,7 +82,7 @@ async function renderPortfolio(){
       <div class="grid cols-2">
         <div>
           <h3>Growth vs Safety</h3>
-          <canvas id="allocPie" height="180"></canvas>
+          <div class="chartwrap"><canvas id="allocPie"></canvas></div>
           <small class="muted">Balanced target (demo): Growth 70% / Safety 30%.</small>
         </div>
         <div>
@@ -103,37 +95,27 @@ async function renderPortfolio(){
 
     <div class="card">
       <h2>ETF Performance (Demo)</h2>
-      <canvas id="perfLines" height="220"></canvas>
+      <div class="chartwrap"><canvas id="perfLines"></canvas></div>
       <div class="tiles" id="plTiles"></div>
       <small class="muted">Illustrative lines from /assets/prices.json (not live data).</small>
     </div>
   `;
 
-  // Build Planned Buys tiles with borders
-  const planned = uni.etfs.map(e=>{
-    return `
-      <div class="tile">
-        <div class="hdr">
-          <span>${e.symbol}</span>
-          <span class="badge-pill">${e.sleeve.toUpperCase()}</span>
-        </div>
-        <div>Fee: ${e.fee.toFixed(2)}%</div>
-      </div>`;
-  }).join('');
+  const planned = uni.etfs.map(e=>(
+    `<div class="tile">
+       <div class="hdr"><span>${e.symbol}</span><span class="badge-pill">${e.sleeve.toUpperCase()}</span></div>
+       <div>Fee: ${e.fee.toFixed(2)}%</div>
+     </div>`
+  )).join('');
   el('#plannedTiles').innerHTML = planned;
 
-  // Pie: growth vs safety target
   const pieCtx = document.getElementById('allocPie');
   charts.push(new Chart(pieCtx, {
     type:'pie',
-    data:{
-      labels:['Growth','Safety'],
-      datasets:[{ data:[alloc.growth*100, alloc.safety*100] }]
-    },
+    data:{ labels:['Growth','Safety'], datasets:[{ data:[alloc.growth*100, alloc.safety*100] }] },
     options:{ responsive:true, maintainAspectRatio:false }
   }));
 
-  // Lines: symbols time-series (normalized to 100)
   const syms = ['VAS.AX','VGS.AX','IVV.AX','VAF.AX','GOLD.AX'];
   const lbls = prices.labels;
   const ds = syms.map((s)=> {
@@ -151,7 +133,6 @@ async function renderPortfolio(){
     options:{ responsive:true, maintainAspectRatio:false }
   }));
 
-  // P/L tiles per ETF (period change)
   const perf = syms.map(s=>{
     const ser = prices.series[s]||[];
     if (ser.length<2) return { s, pct: 0 };
@@ -170,6 +151,7 @@ async function renderPortfolio(){
   }).join('');
 }
 
+// ---------- AUTOPILOT ----------
 async function renderAutopilot(){
   killCharts();
   const rules = await loadJSON('/assets/rules.json');
@@ -197,6 +179,7 @@ async function renderAutopilot(){
   `;
 }
 
+// ---------- EXECUTE ----------
 async function renderExecute(){
   killCharts();
   app.innerHTML = `
@@ -224,6 +207,7 @@ async function renderExecute(){
   `;
 }
 
+// ---------- WITHDRAW ----------
 async function renderWithdraw(){
   killCharts();
   app.innerHTML = `
@@ -237,35 +221,27 @@ async function renderWithdraw(){
       <button class="btn" id="csv" style="margin-top:10px;display:none">Download CSV</button>
     </div>
   `;
-
   el('#go').onclick = () => {
     const v = parseFloat(el('#amt').value || '0');
     if(!v || v<=0){ el('#plan').innerHTML = '<small class="muted">Enter a valid amount.</small>'; return; }
-
-    // Simple safety-first split example
     const vaf = Math.max(50, Math.round(v * 0.6));
     const gold = Math.max(0, Math.round(v - vaf));
-
     const rows = [
       ['Symbol','Action','Amount(AUD)','Notes'],
       ['VAF.AX','SELL', vaf, 'Safety first'],
       ['GOLD.AX','SELL', gold, 'Then gold'],
     ];
-
     el('#plan').innerHTML = 'Plan: Sell Safety sleeve first (VAF/GOLD), min trade $50.';
     const blob = new Blob([rows.map(r=>r.join(',')).join('\n')], {type:'text/csv'});
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a'); a.href=url; a.download=`withdraw_${Date.now()}.csv`;
-
-    const btn = el('#csv');
-    btn.style.display='inline-block';
-    btn.onclick=()=>a.click();
+    const btn = el('#csv'); btn.style.display='inline-block'; btn.onclick=()=>a.click();
   };
 }
 
+// ---------- SETTINGS ----------
 async function renderSettings(){
   killCharts();
-  // Detect Stripe redirect (?session_id=...) inside the hash, e.g. #/settings?session_id=cs_...
   const rawHash = location.hash || '';
   const qp = rawHash.includes('?') ? rawHash.split('?')[1] : '';
   const params = new URLSearchParams(qp);
@@ -279,15 +255,9 @@ async function renderSettings(){
       const res = await fetch(`/api/session-status?session_id=${encodeURIComponent(sid)}`);
       const data = await res.json();
       if (data && (data.status === 'active' || data.status === 'trialing')) {
-        pro = true;
-        localStorage.setItem('pro', 'true');
-        message = '✅ Pro subscription active.';
-      } else {
-        message = '⚠️ Subscription not active yet.';
-      }
-    } catch {
-      message = '⚠️ Could not verify subscription.';
-    }
+        pro = true; localStorage.setItem('pro','true'); message = '✅ Pro subscription active.';
+      } else { message = '⚠️ Subscription not active yet.'; }
+    } catch { message = '⚠️ Could not verify subscription.'; }
   }
 
   app.innerHTML = `
@@ -314,6 +284,7 @@ async function renderSettings(){
   `;
 }
 
+// ---------- LEGAL ----------
 async function renderLegal(){
   killCharts();
   app.innerHTML = `
@@ -328,6 +299,7 @@ async function renderLegal(){
   `;
 }
 
+// ---------- BILLING ----------
 async function renderBilling(){
   killCharts();
   app.innerHTML = `
@@ -342,21 +314,16 @@ async function renderBilling(){
     try {
       const res = await fetch('/api/checkout', { method: 'POST' });
       const data = await res.json();
-      if (data && data.url) {
-        location.href = data.url;
-      } else {
-        alert('Checkout init failed.');
-      }
-    } catch (e) {
-      alert('Network error starting checkout.');
-    }
+      if (data && data.url) location.href = data.url;
+      else alert('Checkout init failed.');
+    } catch { alert('Network error starting checkout.'); }
   };
 }
 
-// ---------------- ROUTER ----------------
+// ---------- ROUTER ----------
 function router(){
   const hash = location.hash.replace('#','') || '/home';
-  const base = hash.split('?')[0]; // strip query
+  const base = hash.split('?')[0];
   const view = routes[base] || renderHome;
   view();
 }
