@@ -1,4 +1,4 @@
-// Wealth Builder — Static SPA with charts (Chart.js)
+// Wealth Builder — Static SPA with charts and upgraded UI
 // Hash router; assets from /assets/*.json; mock price series in /assets/prices.json
 // Billing via Stripe Checkout (optional), Pro flag stored in localStorage
 
@@ -72,10 +72,7 @@ async function renderHome(){
   const ctx = document.getElementById('wealthLine');
   charts.push(new Chart(ctx, {
     type:'line',
-    data:{
-      labels,
-      datasets:[{label:'Wealth (AUD)', data, tension:0.25}]
-    },
+    data:{ labels, datasets:[{label:'Wealth (AUD)', data, tension:0.25}] },
     options:{ responsive:true, maintainAspectRatio:false }
   }));
 }
@@ -85,9 +82,6 @@ async function renderPortfolio(){
   const uni = await loadJSON('/assets/universe.json');
   const prices = await loadJSON('/assets/prices.json');
 
-  // Example target allocation for Balanced (70/30)
-  const growth = uni.etfs.filter(x=>x.sleeve==='growth').map(x=>x.symbol);
-  const safety = uni.etfs.filter(x=>x.sleeve==='safety').map(x=>x.symbol);
   const alloc = { growth: 0.7, safety: 0.3 };
 
   app.innerHTML = `
@@ -101,7 +95,7 @@ async function renderPortfolio(){
         </div>
         <div>
           <h3>Planned Buys</h3>
-          <ul>${uni.etfs.map(e=>`<li>${e.symbol} — ${e.sleeve}</li>`).join('')}</ul>
+          <div class="tiles" id="plannedTiles"></div>
           <small class="muted">Lowest-fee within each sleeve get priority (MVP rule).</small>
         </div>
       </div>
@@ -110,10 +104,23 @@ async function renderPortfolio(){
     <div class="card">
       <h2>ETF Performance (Demo)</h2>
       <canvas id="perfLines" height="220"></canvas>
-      <div id="leaders" style="margin-top:8px;"></div>
+      <div class="tiles" id="plTiles"></div>
       <small class="muted">Illustrative lines from /assets/prices.json (not live data).</small>
     </div>
   `;
+
+  // Build Planned Buys tiles with borders
+  const planned = uni.etfs.map(e=>{
+    return `
+      <div class="tile">
+        <div class="hdr">
+          <span>${e.symbol}</span>
+          <span class="badge-pill">${e.sleeve.toUpperCase()}</span>
+        </div>
+        <div>Fee: ${e.fee.toFixed(2)}%</div>
+      </div>`;
+  }).join('');
+  el('#plannedTiles').innerHTML = planned;
 
   // Pie: growth vs safety target
   const pieCtx = document.getElementById('allocPie');
@@ -144,7 +151,7 @@ async function renderPortfolio(){
     options:{ responsive:true, maintainAspectRatio:false }
   }));
 
-  // Leaders: compute % change from first to last
+  // P/L tiles per ETF (period change)
   const perf = syms.map(s=>{
     const ser = prices.series[s]||[];
     if (ser.length<2) return { s, pct: 0 };
@@ -152,10 +159,15 @@ async function renderPortfolio(){
     return { s, pct: Math.round(pct*10)/10 };
   }).sort((a,b)=>b.pct-a.pct);
 
-  el('#leaders').innerHTML = `
-    <strong>Leaders (period change):</strong>
-    <ul>${perf.map(p=>`<li>${p.s} — ${p.pct >= 0 ? '+' : ''}${p.pct}%</li>`).join('')}</ul>
-  `;
+  el('#plTiles').innerHTML = perf.map(p=>{
+    const cls = p.pct >= 0 ? 'gain' : 'loss';
+    return `
+      <div class="tile">
+        <div class="hdr"><span>${p.s}</span><span class="badge-pill">P/L</span></div>
+        <div class="${cls}" style="font-size:20px;font-weight:900">${p.pct>=0?'+':''}${p.pct}%</div>
+        <small class="muted">From first to last data point</small>
+      </div>`;
+  }).join('');
 }
 
 async function renderAutopilot(){
@@ -190,12 +202,22 @@ async function renderExecute(){
   app.innerHTML = `
     <div class="card">
       <h2>Execute (Deep Links)</h2>
-      <div class="grid cols-2">
-        <button class="btn" onclick="window.open('https://www.raizinvest.com.au/','_blank')">Raiz</button>
-        <button class="btn" onclick="window.open('https://www.spaceship.com.au/','_blank')">Spaceship</button>
-        <button class="btn" onclick="window.open('https://www.commsec.com.au/','_blank')">CommSec Pocket</button>
-        <button class="btn" onclick="window.open('https://www.stockspot.com.au/','_blank')">Stockspot</button>
-        <button class="btn" onclick="window.open('https://www.quietgrowth.com.au/','_blank')">QuietGrowth</button>
+      <div class="providers">
+        <button class="provider raiz" onclick="window.open('https://www.raizinvest.com.au/','_blank')">
+          RAIZ <span class="badge">Growth Bundle</span>
+        </button>
+        <button class="provider spaceship" onclick="window.open('https://www.spaceship.com.au/','_blank')">
+          SPACESHIP <span class="badge">Global</span>
+        </button>
+        <button class="provider commsec" onclick="window.open('https://www.commsec.com.au/','_blank')">
+          COMMSEC POCKET <span class="badge">ETF</span>
+        </button>
+        <button class="provider stockspot" onclick="window.open('https://www.stockspot.com.au/','_blank')">
+          STOCKSPOT <span class="badge">Managed</span>
+        </button>
+        <button class="provider quietgrowth" onclick="window.open('https://www.quietgrowth.com.au/','_blank')">
+          QUIETGROWTH <span class="badge">Managed</span>
+        </button>
       </div>
       <p><small class="muted">You execute at your chosen provider. No custody in this app.</small></p>
     </div>
