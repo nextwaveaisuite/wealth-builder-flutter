@@ -1,0 +1,10 @@
+{
+  "name": "wealthbuilder-static",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Wealth Builder static site with Stripe billing (Vercel serverless).",
+  "type": "module",
+  "dependencies": {
+    "stripe": "^16.6.0"
+  }
+}
