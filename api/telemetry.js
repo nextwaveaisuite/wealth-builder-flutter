@@ -5,14 +5,14 @@ const MAX = 1000;
 module.exports = async (req, res) => {
   try {
     if (req.method !== 'POST') return res.status(405).end();
-    const body = req.body || {};
-    const events = Array.isArray(body.events) ? body.events : [];
+    const { events } = req.body || {};
+    const arr = Array.isArray(events) ? events : [];
     const ts = Date.now();
-    for (const ev of events) {
+    for (const ev of arr) {
       mem.push({ ts, ...ev });
       if (mem.length > MAX) mem.shift();
     }
-    res.json({ ok:true, stored: events.length });
+    res.json({ ok:true, stored: arr.length });
   } catch (e) {
     res.status(500).json({ ok:false, error:e.message });
   }
