@@ -1,12 +1,15 @@
 {
   "version": 2,
-  "functions": {
-    "api/**/*.{js,ts}": {
-      "runtime": "nodejs20.x",
-      "memory": 256,
-      "maxDuration": 10
-    }
-  },
+  "builds": [
+    { "src": "api/**/*.js", "use": "@vercel/node@3.0.0" },
+    { "src": "index.html",   "use": "@vercel/static@1.0.0" },
+    { "src": "style.css",    "use": "@vercel/static@1.0.0" },
+    { "src": "app.js",       "use": "@vercel/static@1.0.0" },
+    { "src": "bot.js",       "use": "@vercel/static@1.0.0" },
+    { "src": "legal/**",     "use": "@vercel/static@1.0.0" },
+    { "src": "assets/**",    "use": "@vercel/static@1.0.0" },
+    { "src": "js/**",        "use": "@vercel/static@1.0.0" }
+  ],
   "routes": [
     { "src": "^/api/(.*)$", "dest": "/api/$1" },
     { "src": "^(?!/api/).*", "dest": "/index.html" }
