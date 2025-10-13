@@ -196,7 +196,7 @@
       telemetry([{t:'quotes_fail'}]);
     }
 
-    // P/L Demo list (updated when live quotes are running)
+    // P/L Demo list
     const demoPL = [
       { t:'IVV.AX', r:'+15%' },
       { t:'GOLD.AX', r:'+11%' },
@@ -302,7 +302,6 @@
     document.getElementById('wPlan').onclick = ()=>{
       const amt = Number(document.getElementById('wAmt').value||0);
       if (!amt || amt<1) return alert('Enter amount');
-      // naive split Safety first
       const legs = [
         { ticker:'VAF.AX', dollars: Math.round(amt*0.7) },
         { ticker:'GOLD.AX', dollars: amt - Math.round(amt*0.7) }
@@ -425,7 +424,7 @@
   routes['#/admin'] = async function(){
     const token = sessionStorage.getItem('admin_ok') ? null : prompt('Enter admin token');
     if (token !== null) {
-      const ok = token === '' ? false : true; // any non-empty accepted in MVP; use ENV on real deploy behind edge middleware if desired
+      const ok = token === '' ? false : true; // placeholder gate
       if (!ok) { content.innerHTML = '<div class="card"><h2>Denied</h2></div>'; return; }
       sessionStorage.setItem('admin_ok','1');
     }
