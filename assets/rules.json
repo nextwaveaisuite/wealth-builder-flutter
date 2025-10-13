@@ -1,17 +1,8 @@
 {
+  "min_trade_aud": 50,
   "risk_bands": {
-    "conservative": {
-      "growth": 0.4,
-      "safety": 0.6
-    },
-    "balanced": {
-      "growth": 0.7,
-      "safety": 0.3
-    },
-    "growth": {
-      "growth": 0.9,
-      "safety": 0.1
-    }
-  },
-  "min_trade_size": 50
+    "conservative": { "growth": 40, "safety": 60 },
+    "balanced":     { "growth": 70, "safety": 30 },
+    "growth":       { "growth": 85, "safety": 15 }
+  }
 }
