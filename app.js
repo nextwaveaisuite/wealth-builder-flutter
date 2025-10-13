@@ -1,22 +1,18 @@
 /* app.js — Wealth Builder (Static SPA)
-   Requires: Chart.js loaded in index.html
+   Requires: Chart.js in index.html
+   PDF: jsPDF via window.jspdf (index.html)
 */
 
 const app = document.getElementById('app');
 const charts = [];
-
-/* ---------- helpers ---------- */
 function el(q){ return document.querySelector(q); }
 function killCharts(){ while(charts.length){ try{ charts.pop().destroy(); }catch(_){} } }
-async function loadJSON(path){ const r = await fetch(path, { cache: 'no-store' }); return r.json(); }
+async function loadJSON(path){ const r = await fetch(path, { cache:'no-store' }); return r.json(); }
 
-/* ---------- simple state ---------- */
-const state = {
-  pro: false,
-  userEmail: null
-};
+/* ---------- state ---------- */
+const state = { pro:false, userEmail:null };
 
-/* ---------- router ---------- */
+/* ---------- routes ---------- */
 const routes = {
   '/home': renderHome,
   '/portfolio': renderPortfolio,
@@ -27,23 +23,15 @@ const routes = {
   '/faq': renderFAQ,
   '/billing': renderBilling
 };
+function renderRoute(){ const hash = location.hash || '#/home'; (routes[hash.replace(/^#/, '')]||renderHome)(); }
+addEventListener('hashchange', renderRoute);
+addEventListener('load', renderRoute);
 
-function renderRoute(){
-  const hash = location.hash || '#/home';
-  const path = hash.replace(/^#/, '');
-  const fn = routes[path] || renderHome;
-  fn();
-}
-window.addEventListener('hashchange', renderRoute);
-window.addEventListener('load', renderRoute);
-
-/* ---------- views ---------- */
-
+/* ---------- Home ---------- */
 async function renderHome(){
   killCharts();
   const dipOn = JSON.parse(localStorage.getItem('dipOn') || 'true');
   const dipCap = parseInt(localStorage.getItem('dipCap') || '80', 10);
-
   app.innerHTML = `
     <div class="card">
       <h2>What Wealth Builder Does</h2>
@@ -58,10 +46,7 @@ async function renderHome(){
       <p class="muted"><b>We don’t hold funds or place orders.</b> You execute at your chosen provider.</p>
     </div>
 
-    <div class="card">
-      <h2>Next Order Plan</h2>
-      <div>Balanced 70/30 • $50 Friday • Drift-aware split</div>
-    </div>
+    <div class="card"><h2>Next Order Plan</h2><div>Balanced 70/30 • $50 Friday • Drift-aware split</div></div>
 
     <div class="card">
       <h2>Right Now Tilt</h2>
@@ -83,29 +68,26 @@ async function renderHome(){
 
     <div class="banner">All providers governed equally · No favorites · No commissions influence allocation</div>
   `;
-
   el('#saveDip')?.addEventListener('click', () => {
     localStorage.setItem('dipOn', JSON.stringify(el('#dip').checked));
     localStorage.setItem('dipCap', String(parseInt(el('#cap').value || '80', 10)));
     alert('Saved.');
   });
 
-  // Demo wealth line
-  const labels = Array.from({length: 12}, (_,i)=>`M${i+1}`);
+  const labels = Array.from({length:12}, (_,i)=>`M${i+1}`);
   let contrib = 50 * 4, total = 0, data = [];
   for (let i=0;i<labels.length;i++){ total += contrib; total *= 1.01; data.push(Math.round(total)); }
   charts.push(new Chart(document.getElementById('wealthLine'), {
-    type:'line',
-    data:{ labels, datasets:[{label:'Wealth (AUD)', data, tension:0.25}] },
+    type:'line', data:{ labels, datasets:[{label:'Wealth (AUD)', data, tension:0.25}] },
     options:{ responsive:true, maintainAspectRatio:false }
   }));
 }
 
-/* ========= UPDATED PORTFOLIO (Planned Buys + P/L) ========= */
+/* ---------- Portfolio (live-ish P/L + exports) ---------- */
 async function renderPortfolio(){
   killCharts();
 
-  // Universe for Planned Buys (MVP)
+  // Universe (planned buys, sleeves + fee)
   const universe = [
     { symbol:'VAS.AX',  sleeve:'Growth',  fee:0.10 },
     { symbol:'VGS.AX',  sleeve:'Growth',  fee:0.18 },
@@ -113,153 +95,217 @@ async function renderPortfolio(){
     { symbol:'VAF.AX',  sleeve:'Safety',  fee:0.20 },
     { symbol:'GOLD.AX', sleeve:'Safety',  fee:0.40 }
   ];
-  const bySleeve = universe.reduce((m,a)=>((m[a.sleeve]??=[]).push(a),m),{});
-  const lowestPerSleeve = Object.fromEntries(
-    Object.entries(bySleeve).map(([s,arr])=>{
-      const low = arr.reduce((best,a)=>a.fee<best.fee?a:best,arr[0]);
-      return [s, low.symbol];
-    })
-  );
-
-  // P/L (First → Last) — your figures
-  const pl = [
-    { symbol:'IVV.AX',  pct:+15 },
-    { symbol:'GOLD.AX', pct:+11 },
-    { symbol:'VAS.AX',  pct:+10 },
-    { symbol:'VGS.AX',  pct:+8  },
-    { symbol:'VAF.AX',  pct:+4  }
-  ];
+  const sleeves = universe.reduce((m,a)=>((m[a.sleeve]??=[]).push(a),m),{});
+  const lowestPerSleeve = Object.fromEntries(Object.entries(sleeves).map(([s,arr])=>{
+    const low = arr.reduce((best,a)=>a.fee<best.fee?a:best,arr[0]); return [s, low.symbol];
+  }));
 
   app.innerHTML = `
     <div class="card">
       <h2>Portfolio Overview</h2>
       <div class="pfolio">
-        <!-- Growth vs Safety -->
         <div class="pf-card">
           <h3 class="pf-title">Growth vs Safety</h3>
           <div class="chartwrap"><canvas id="pieGS"></canvas></div>
           <div class="pf-meta">Target 70/30 · Drift-aware rebalancing</div>
         </div>
 
-        <!-- ETF Performance -->
         <div class="pf-card">
           <h3 class="pf-title">ETF Performance (Demo)</h3>
           <div class="chartwrap"><canvas id="linePerf"></canvas></div>
           <div class="pf-meta">VAS, VGS, IVV (growth) · VAF, GOLD (safety)</div>
         </div>
 
-        <!-- Planned Buys -->
         <div class="pf-card">
           <h3 class="pf-title">Planned Buys</h3>
           <div id="planned-buys"></div>
           <div class="pf-meta"><b>MVP rule:</b> Lowest fee within each sleeve gets priority.</div>
+          <div style="margin-top:8px; display:flex; gap:8px; flex-wrap:wrap">
+            <button class="btn secondary" id="export-plan-csv">Export Plan CSV</button>
+          </div>
         </div>
 
-        <!-- NEW: P/L First → Last -->
         <div class="pf-card">
           <h3 class="pf-title">P/L (First → Last)</h3>
           <div id="pl-list"></div>
-          <div class="pf-meta">Demo figures; swap to live cache later.</div>
+          <div class="pf-meta">Computed from /api/prices (demo). Replace with live feeds later.</div>
+          <div style="margin-top:8px; display:flex; gap:8px; flex-wrap:wrap">
+            <button class="btn secondary" id="export-pl-csv">Export P/L CSV</button>
+            <button class="btn" id="export-pdf">Export PDF</button>
+          </div>
         </div>
       </div>
     </div>
   `;
 
-  // Pie (growth/safety)
+  // Charts
   charts.push(new Chart(document.getElementById('pieGS'), {
-    type:'pie',
-    data:{ labels:['Growth','Safety'], datasets:[{ data:[70,30] }] },
+    type:'pie', data:{ labels:['Growth','Safety'], datasets:[{ data:[70,30] }] },
     options:{ responsive:true, maintainAspectRatio:false }
   }));
 
-  // Demo multi-line
   const labels = Array.from({length:12},(_,i)=>`M${i+1}`);
   const mk = ()=>labels.map((_,i)=>100+Math.round(i*2 + Math.random()*6));
   charts.push(new Chart(document.getElementById('linePerf'),{
     type:'line',
-    data:{
-      labels,
-      datasets:[
-        {label:'VAS.AX',  data:mk(), tension:.25},
-        {label:'VGS.AX',  data:mk(), tension:.25},
-        {label:'IVV.AX',  data:mk(), tension:.25},
-        {label:'VAF.AX',  data:mk(), tension:.25},
-        {label:'GOLD.AX', data:mk(), tension:.25},
-      ]
-    },
+    data:{ labels, datasets:[
+      {label:'VAS.AX',  data:mk(), tension:.25},
+      {label:'VGS.AX',  data:mk(), tension:.25},
+      {label:'IVV.AX',  data:mk(), tension:.25},
+      {label:'VAF.AX',  data:mk(), tension:.25},
+      {label:'GOLD.AX', data:mk(), tension:.25},
+    ]},
     options:{ responsive:true, maintainAspectRatio:false }
   }));
 
-  // Planned Buys list (with priority badges)
+  // Planned Buys render
   const buysWrap = document.createElement('div');
-  buysWrap.style.display='grid';
-  buysWrap.style.gap='8px';
+  buysWrap.style.display='grid'; buysWrap.style.gap='8px';
   universe.forEach(a=>{
     const row = document.createElement('div');
-    row.style.display='flex';
-    row.style.justifyContent='space-between';
-    row.style.alignItems='center';
-    row.style.border='2px solid var(--border)';
-    row.style.borderRadius='12px';
-    row.style.padding='10px 12px';
-    row.style.background='#fff';
-
+    row.style.cssText='display:flex;justify-content:space-between;align-items:center;border:2px solid var(--border);border-radius:12px;padding:10px 12px;background:#fff';
     const left = document.createElement('div');
     left.innerHTML = `
       <div style="font-weight:900">${a.symbol} <span style="font-weight:800;color:var(--muted)">— ${a.sleeve}</span></div>
-      <div style="font-weight:800;color:var(--muted)">Fee: ${a.fee.toFixed(2)}%</div>
-    `;
+      <div style="font-weight:800;color:var(--muted)">Fee: ${a.fee.toFixed(2)}%</div>`;
     const right = document.createElement('div');
-    right.style.display='flex'; right.style.gap='8px'; right.style.alignItems='center';
-
+    right.style.cssText='display:flex;gap:8px;align-items:center';
     if (lowestPerSleeve[a.sleeve] === a.symbol) {
       const badge = document.createElement('span');
       badge.textContent='Priority (lowest fee)';
-      badge.style.border='2px solid var(--border)';
-      badge.style.borderRadius='999px';
-      badge.style.padding='4px 10px';
-      badge.style.fontWeight='900';
-      badge.style.background='var(--bg-2)';
+      badge.style.cssText='border:2px solid var(--border);border-radius:999px;padding:4px 10px;font-weight:900;background:var(--bg-2)';
       right.appendChild(badge);
     }
     row.appendChild(left); row.appendChild(right); buysWrap.appendChild(row);
   });
   document.getElementById('planned-buys').appendChild(buysWrap);
 
-  // P/L list
+  // Fetch series & compute P/L
+  let plComputed = [];
+  try {
+    const tickers = universe.map(u=>u.symbol).join(',');
+    const r = await fetch(`/api/prices?tickers=${encodeURIComponent(tickers)}`);
+    const j = await r.json();
+    plComputed = Object.entries(j.series).map(([symbol, arr])=>{
+      const first = arr[0] || 100, last = arr[arr.length-1] || 100;
+      const pct = Math.round(((last/first)-1)*100);
+      return { symbol, pct };
+    })
+    // Sort by best to worst
+    .sort((a,b)=>b.pct - a.pct);
+  } catch (_) {
+    // Fallback to demo ranking if API fails
+    plComputed = [
+      { symbol:'IVV.AX',  pct:15 },
+      { symbol:'GOLD.AX', pct:11 },
+      { symbol:'VAS.AX',  pct:10 },
+      { symbol:'VGS.AX',  pct:8  },
+      { symbol:'VAF.AX',  pct:4  }
+    ];
+  }
+
+  // Render P/L list
   const plWrap = document.createElement('div');
-  plWrap.style.display='grid';
-  plWrap.style.gap='8px';
-  pl.forEach(x=>{
+  plWrap.style.display='grid'; plWrap.style.gap='8px';
+  plComputed.forEach(x=>{
     const row = document.createElement('div');
-    row.style.display='flex';
-    row.style.justifyContent='space-between';
-    row.style.alignItems='center';
-    row.style.border='2px solid var(--border)';
-    row.style.borderRadius='12px';
-    row.style.padding='10px 12px';
-    row.style.background='#fff';
-
-    const left = document.createElement('div');
-    left.innerHTML = `<div style="font-weight:900">${x.symbol}</div>`;
-
-    const right = document.createElement('div');
-    const pos = x.pct >= 0;
-    right.innerHTML = `<span style="
-      font-weight:900;
-      border:2px solid var(--border);
-      border-radius:999px;
-      padding:4px 10px;
-      background:${pos ? '#eaffea' : '#ffecec'};
-      color:${pos ? '#065f46' : '#7f1d1d'};
-    ">${x.pct>0?'+':''}${x.pct}%</span>`;
-
+    row.style.cssText='display:flex;justify-content:space-between;align-items:center;border:2px solid var(--border);border-radius:12px;padding:10px 12px;background:#fff';
+    const left = document.createElement('div'); left.innerHTML = `<div style="font-weight:900">${x.symbol}</div>`;
+    const right = document.createElement('div'); const pos = x.pct >= 0;
+    right.innerHTML = `<span style="font-weight:900;border:2px solid var(--border);border-radius:999px;padding:4px 10px;background:${pos?'#eaffea':'#ffecec'};color:${pos?'#065f46':'#7f1d1d'}">${x.pct>0?'+':''}${x.pct}%</span>`;
     row.appendChild(left); row.appendChild(right); plWrap.appendChild(row);
   });
   document.getElementById('pl-list').appendChild(plWrap);
+
+  // Export buttons
+  el('#export-plan-csv')?.addEventListener('click', ()=>{
+    const header = 'symbol,sleeve,fee,is_priority\n';
+    const rows = universe.map(a=>`${a.symbol},${a.sleeve},${a.fee.toFixed(2)}%,${lowestPerSleeve[a.sleeve]===a.symbol?'yes':'no'}`).join('\n');
+    downloadCSV('planned-buys.csv', header+rows+'\n');
+  });
+
+  el('#export-pl-csv')?.addEventListener('click', ()=>{
+    const header = 'symbol,pl_percent\n';
+    const rows = plComputed.map(x=>`${x.symbol},${x.pct}`).join('\n');
+    downloadCSV('pl-first-last.csv', header+rows+'\n');
+  });
+
+  el('#export-pdf')?.addEventListener('click', ()=>{
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    let y = 12;
+
+    doc.setFont('helvetica','bold'); doc.setFontSize(14);
+    doc.text('Wealth Builder — Portfolio Export', 12, y); y+=8;
+
+    doc.setFontSize(11); doc.setFont('helvetica','normal');
+    doc.text('Planned Buys (MVP rule: lowest fee per sleeve gets priority)', 12, y); y+=6;
+    universe.forEach(a=>{
+      const pri = lowestPerSleeve[a.sleeve]===a.symbol ? ' • Priority' : '';
+      doc.text(`${a.symbol} — ${a.sleeve} — Fee ${a.fee.toFixed(2)}%${pri}`, 12, y); y+=6;
+    });
+    y+=4;
+
+    doc.setFont('helvetica','bold'); doc.text('P/L (First → Last)', 12, y); y+=6;
+    doc.setFont('helvetica','normal');
+    plComputed.forEach(x=>{
+      const s = `${x.symbol} — ${x.pct>0?'+':''}${x.pct}%`;
+      doc.text(s, 12, y); y+=6;
+    });
+
+    doc.save('wealth-builder-portfolio.pdf');
+  });
 }
 
-/* ========= Execute ========= */
+// CSV helper
+function downloadCSV(filename, text){
+  const blob = new Blob([text], {type:'text/csv'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href=url; a.download=filename; a.click();
+  URL.revokeObjectURL(url);
+}
+
+/* ---------- Autopilot (mirrored cards) ---------- */
+function renderAutopilot(){
+  killCharts();
+  app.innerHTML = `
+    <div class="card">
+      <h2>Autopilot</h2>
+      <div class="pfolio">
+        <div class="pf-card">
+          <h3 class="pf-title">Schedule</h3>
+          <ul>
+            <li><b>Cadence:</b> Weekly (Friday)</li>
+            <li><b>Amount:</b> $50</li>
+            <li><b>DCA:</b> On</li>
+          </ul>
+        </div>
+        <div class="pf-card">
+          <h3 class="pf-title">Loss Guard</h3>
+          <ul>
+            <li>Safety floor ≥ 30%</li>
+            <li>Growth overweight cap ≤ 7%</li>
+            <li>Weekly brake ~−5% → pause growth; route to VAF/GOLD</li>
+          </ul>
+        </div>
+        <div class="pf-card">
+          <h3 class="pf-title">Radar (Tilts)</h3>
+          <ul>
+            <li>Max 2 actions/week</li>
+            <li>Monthly extra capped (~$80)</li>
+            <li>Tiny tilts never dominate long-term plan</li>
+          </ul>
+        </div>
+      </div>
+      <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn" onclick="alert('Autopilot kept ON in MVP (plan generation only).')">Keep ON</button>
+        <button class="btn secondary" onclick="alert('Autopilot paused (demo).')">Pause</button>
+      </div>
+    </div>
+  `;
+}
+
+/* ---------- Execute (mirrored card style already) ---------- */
 function renderExecute(){
   killCharts();
   app.innerHTML = `
@@ -305,27 +351,7 @@ function providerCard(name, url, cls, bullets=[]){
   `;
 }
 
-/* ========= Autopilot ========= */
-function renderAutopilot(){
-  killCharts();
-  app.innerHTML = `
-    <div class="card">
-      <h2>Autopilot</h2>
-      <p>Schedule: <b>Weekly — Friday — $50</b></p>
-      <ul>
-        <li><b>Loss Guard</b>: safety floor 30%, growth overweight cap 7%</li>
-        <li><b>Weekly brake</b>: on ~−5% drawdown → pause growth; route to VAF/GOLD</li>
-        <li><b>Radar</b>: max 2 actions/week; extra buys capped (~$80/mo)</li>
-      </ul>
-      <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <button class="btn" onclick="alert('Autopilot kept ON in MVP (plan generation only).')">Keep ON</button>
-        <button class="btn secondary" onclick="alert('Autopilot paused (demo).')">Pause</button>
-      </div>
-    </div>
-  `;
-}
-
-/* ========= Withdraw ========= */
+/* ---------- Withdraw ---------- */
 function renderWithdraw(){
   killCharts();
   app.innerHTML = `
@@ -339,7 +365,6 @@ function renderWithdraw(){
       <div id="wd-out" style="margin-top:12px"></div>
     </div>
   `;
-
   el('#wd-plan')?.addEventListener('click', () => {
     const amt = parseFloat(el('#wd-amt').value || '0');
     if (!(amt > 0)) return alert('Enter an amount.');
@@ -358,10 +383,9 @@ function renderWithdraw(){
   });
 }
 
-/* ========= Settings (handles Stripe session_id) ========= */
+/* ---------- Settings (Stripe callback) ---------- */
 async function renderSettings(){
   killCharts();
-  // Detect Stripe redirect ?session_id=...
   const params = new URLSearchParams(location.search);
   const sid = params.get('session_id');
   if (sid) {
@@ -369,12 +393,10 @@ async function renderSettings(){
       const r = await fetch(`/api/session-status?session_id=${encodeURIComponent(sid)}`);
       const j = await r.json();
       if (j.status === 'active' || j.status === 'trialing') {
-        state.pro = true;
-        state.userEmail = j.email || state.userEmail;
+        state.pro = true; state.userEmail = j.email || state.userEmail;
         localStorage.setItem('wb_pro', '1');
       }
     } catch(_) {}
-    // Clean query string
     history.replaceState({}, '', location.pathname + '#/settings');
   } else {
     state.pro = localStorage.getItem('wb_pro') === '1';
@@ -415,7 +437,6 @@ async function renderSettings(){
       </div>
     </div>
   `;
-
   el('#s-save')?.addEventListener('click', () => {
     localStorage.setItem('riskBand', el('#s-risk').value);
     localStorage.setItem('cadence', el('#s-cad').value);
@@ -424,7 +445,7 @@ async function renderSettings(){
   });
 }
 
-/* ========= FAQ ========= */
+/* ---------- FAQ ---------- */
 function renderFAQ(){
   killCharts();
   app.innerHTML = `
@@ -442,7 +463,7 @@ function renderFAQ(){
   `;
 }
 
-/* ========= Billing (Stripe checkout) ========= */
+/* ---------- Billing ---------- */
 function renderBilling(){
   killCharts();
   app.innerHTML = `
@@ -461,5 +482,3 @@ function renderBilling(){
     }catch(_){ el('#bill-msg').textContent = 'Checkout failed.'; }
   });
 }
-
-/* ---------- end views ---------- */
