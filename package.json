@@ -5,6 +5,7 @@
   "description": "Wealth Builder — static SPA with Vercel serverless APIs",
   "scripts": {
     "build": "echo \"Static SPA — no build step\"",
+    "vercel-build": "echo \"Static SPA — no build step\"",
     "start": "echo \"Use 'vercel dev' for local; this project is static.\" && exit 0"
   },
   "engines": {
