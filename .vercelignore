@@ -6,7 +6,7 @@ now.json
 *.php
 **/*.php
 
-# Common noise
+# Common noise (optional)
 node_modules/
 dist/
 build/
