@@ -9,7 +9,10 @@ module.exports = async (req, res) => {
     const priceId = plan === 'lifetime' ? process.env.STRIPE_PRICE_ID_LIFETIME : process.env.STRIPE_PRICE_ID_MONTHLY;
     if (!priceId) return res.status(400).json({ error: 'Missing price id' });
 
-    const site = process.env.SITE_URL || (req.headers['x-forwarded-proto'] ? `${req.headers['x-forwarded-proto']}://${req.headers['x-forwarded-host']}` : 'http://localhost:3000');
+    const proto = req.headers['x-forwarded-proto'] || 'https';
+    const host = req.headers['x-forwarded-host'] || req.headers.host;
+    const site = process.env.SITE_URL || `${proto}://${host}`;
+
     const session = await stripe.checkout.sessions.create({
       mode: plan === 'lifetime' ? 'payment' : 'subscription',
       payment_method_types: ['card'],
@@ -25,4 +28,3 @@ module.exports = async (req, res) => {
     res.status(500).json({ error: e.message });
   }
 };
-
