@@ -1,19 +1,92 @@
-/* Footer (tidy + compact) */
-.foot{
-  padding:14px 18px;
-  border-top:1px solid var(--border);
-  background:#f6efe2;
-  color:var(--muted);
-  margin-top:24px;
-  font-weight:600;
-  font-size:14px;
+:root{
+  --bg:#f8f4ea;            /* soft off-white/cream */
+  --bg-2:#fffaf1;
+  --text:#0f172a;
+  --muted:#6b7280;
+  --border:#e6dcc8;
+  --brand1:#2f6df6;
+  --brand2:#7aa8ff;
+
+  /* Provider brand accents */
+  --raiz:#20a464;          /* Raiz green */
+  --spaceship:#2563eb;     /* Spaceship blue */
+  --commpocket:#f4c20d;    /* CommSec Pocket yellow */
+  --stockspot:#00b7a8;     /* Stockspot teal */
+  --quietgrowth:#7c3aed;   /* QuietGrowth purple */
 }
-.foot-row{
-  display:flex; flex-wrap:wrap; gap:8px; justify-content:center; align-items:center;
-  text-align:center;
-}
-.foot a{ color:inherit; text-decoration:underline; }
-.foot .dot{ color:#c5b69c; }
-.foot .brand{ color:#374151; font-weight:800; }
-.foot .fineprint{ margin-top:6px; font-size:13px; }
+
+/* Base */
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--text);
+  font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif; line-height:1.35}
+h1,h2,h3,h4,strong,b,th,nav a,button,label{font-weight:800}
+p,li,small,td,span,input,textarea{font-weight:700}
+a{color:#0f172a;text-decoration:underline}
+img{max-width:100%;display:block}
+
+/* Layout */
+.topbar{position:sticky;top:0;z-index:10;background:#fff;border-bottom:2px solid var(--border);
+  display:flex;align-items:center;gap:12px;justify-content:space-between;padding:14px 18px}
+.topbar h1{margin:0;font-size:20px}
+.topbar nav a{margin:0 8px;text-decoration:none;border-bottom:2px solid transparent;padding-bottom:2px}
+.topbar nav a:hover{border-bottom-color:#222}
+
+.container{max-width:1100px;margin:18px auto;padding:0 18px}
+.card{background:#fff;border:2px solid var(--border);border-radius:16px;padding:18px;
+  box-shadow:0 4px 12px rgba(0,0,0,.05);margin:12px 0}
+.banner{background:var(--bg-2);border:2px dashed var(--border);border-radius:14px;padding:12px;
+  text-align:center;font-weight:800;}
+
+/* Inputs / Buttons */
+.input{border:2px solid var(--border);border-radius:12px;padding:10px 12px;font-weight:800;background:#fff}
+.btn{border:none;border-radius:12px;padding:10px 14px;font-weight:900;
+  background:linear-gradient(135deg,var(--brand1),var(--brand2));color:#fff;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.12)}
+.btn.secondary{background:#fff;color:#0f172a;border:2px solid var(--border)}
+
+/* Charts */
+.chartwrap{position:relative;height:280px;margin-top:8px}
+
+/* Footer */
+.foot{padding:14px 18px;border-top:2px solid var(--border);background:#f6efe2;color:var(--muted);margin-top:24px}
+.foot-row{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;align-items:center;text-align:center}
+.foot a{color:inherit;text-decoration:underline}
+.foot .dot{color:#c5b69c}
+.foot .brand{color:#374151;font-weight:900}
+.foot .fineprint{margin-top:6px;font-size:13px}
+
+/* Provider grid (Execute) */
+.providers{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));margin-top:6px}
+.pcard{border:2px solid var(--border);border-radius:16px;background:#fff;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,.05)}
+.phead{padding:12px 14px;color:#fff;font-weight:900}
+.pbody{padding:12px 14px}
+.pactions{display:flex;gap:8px;margin-top:8px}
+.pmeta{display:flex;gap:10px;flex-wrap:wrap;color:var(--muted);font-size:13px;font-weight:800}
+
+/* Brand headers */
+.pcard.raiz .phead{background:var(--raiz)}
+.pcard.spaceship .phead{background:var(--spaceship)}
+.pcard.commpocket .phead{background:var(--commpocket);color:#111}
+.pcard.stockspot .phead{background:var(--stockspot)}
+.pcard.quietgrowth .phead{background:var(--quietgrowth)}
+
+/* Portfolio panels */
+.pfolio{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
+.pf-card{border:2px solid var(--border);border-radius:16px;background:#fff;padding:14px}
+.pf-title{font-size:16px;margin:0 0 8px 0}
+.pf-meta{color:var(--muted);font-size:13px;font-weight:800}
+
+/* Bot (unchanged) */
+#wb-bot-btn{position:fixed;right:16px;bottom:16px;z-index:50;width:56px;height:56px;border-radius:50%;
+  background:linear-gradient(135deg,var(--brand1),var(--brand2));color:#fff;border:none;box-shadow:0 10px 22px rgba(0,0,0,.18);font-weight:900;cursor:pointer}
+#wb-bot-panel{position:fixed;right:16px;bottom:84px;z-index:50;width:320px;max-height:60vh;display:none;flex-direction:column;
+  background:#fff;border:2px solid var(--border);border-radius:14px;box-shadow:0 8px 20px rgba(0,0,0,.15);overflow:hidden}
+#wb-bot-head{background:var(--bg-2);padding:10px 12px;font-weight:900;border-bottom:2px solid var(--border)}
+#wb-bot-body{padding:10px;overflow:auto}
+#wb-bot-input{display:flex;gap:6px;padding:10px;border-top:2px solid var(--border);background:#fffaf1}
+#wb-bot-input input{flex:1}
+.bot-q{background:#f4efe3;border:2px solid var(--border);border-radius:10px;padding:8px;margin:6px 0;font-weight:900;cursor:pointer}
+.bot-a{background:#fff;border:2px solid var(--border);border-radius:10px;padding:8px;margin:6px 0;font-weight:800}
+
+/* Utilities */
+.muted{color:var(--muted)}
 
