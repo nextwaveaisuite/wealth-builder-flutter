@@ -1,6 +1,5 @@
-// Anonymous lightweight telemetry intake (in-memory)
 let mem = [];
-const MAX = 1000;
+const MAX = 2000;
 
 module.exports = async (req, res) => {
   try {
@@ -17,3 +16,5 @@ module.exports = async (req, res) => {
     res.status(500).json({ ok:false, error:e.message });
   }
 };
+
+module.exports._dump = () => mem;
