@@ -1,0 +1,6 @@
+version: 2
+safety_floor_pct: 30
+growth_cap_pct: 70
+weekly_brake_drawdown_pct: -5    # routes new buys to safety for the week
+info_banner_drawdown_pct: -2     # informational only
+history_window_days: 120
