@@ -1,0 +1,18 @@
+{
+  "commsec": {
+    "detect": ["Code","Quantity","Average Price"],
+    "map": { "ticker":"Code","units":"Quantity","cost_base":"Average Price" },
+    "transform": { "ticker":"trim", "units":"number", "cost_base":"number" }
+  },
+  "selfwealth": {
+    "detect": ["Symbol","Units","Average Price"],
+    "map": { "ticker":"Symbol","units":"Units","cost_base":"Average Price" },
+    "transform": { "ticker":"trim", "units":"number", "cost_base":"number" }
+  },
+  "raiz": {
+    "detect": ["Asset","Units","Cost Base"],
+    "map": { "ticker":"Asset","units":"Units","cost_base":"Cost Base" },
+    "transform": { "ticker":"upper_map_etf_alias", "units":"number", "cost_base":"number" },
+    "aliases": { "AUS SHARES (VAS)":"VAS.AX","INTL SHARES (VGS)":"VGS.AX","US SHARES (IVV)":"IVV.AX","AUS BONDS (VAF)":"VAF.AX","GOLD (GOLD)":"GOLD.AX" }
+  }
+}
