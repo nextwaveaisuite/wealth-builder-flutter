@@ -8,6 +8,13 @@
   <link rel="icon" href="/favicon.ico">
   <link rel="stylesheet" href="/style.css" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    // If you want, inline your envs here instead of placeholders
+    window.SUPABASE_URL = "{{NEXT_PUBLIC_SUPABASE_URL}}";
+    window.SUPABASE_ANON_KEY = "{{NEXT_PUBLIC_SUPABASE_ANON_KEY}}";
+    window.supabase = supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
+  </script>
 </head>
 <body>
   <header class="topbar">
@@ -21,6 +28,7 @@
       <a href="#/settings">Settings</a>
       <a href="#/faq">FAQ</a>
       <a href="#/billing">Billing</a>
+      <a href="/about-contact.html">About & Contact</a>
     </nav>
   </header>
 
@@ -30,23 +38,35 @@
     <div class="foot-row">
       <span class="brand"><strong>Wealth Builder™</strong> by NextWave AI Suite</span>
       <span class="dot">•</span>
-      <a href="/legal/privacy.html" target="_blank" rel="noopener">Privacy</a>
+      <a href="/legal/index.html" target="_blank" rel="noopener">Legal</a>
       <span class="dot">•</span>
-      <a href="/legal/terms.html" target="_blank" rel="noopener">Terms</a>
+      <a href="/legal/privacy.html" target="_blank" rel="noopener">Privacy Policy</a>
       <span class="dot">•</span>
-      <a href="/legal/disclaimer.html" target="_blank" rel="noopener">Disclaimer</a>
+      <a href="/legal/terms.html" target="_blank" rel="noopener">Terms of Service</a>
       <span class="dot">•</span>
-      <a href="/legal/about.html" target="_blank" rel="noopener">About</a>
+      <a href="/legal/disclaimer.html" target="_blank" rel="noopener">General Advice & Risk Disclaimer</a>
       <span class="dot">•</span>
       <a href="/legal/contact.html" target="_blank" rel="noopener">Contact</a>
     </div>
     <div class="foot-row fineprint">
       <span>General information only — not financial advice. We don’t hold funds or place orders.</span>
       <span class="dot">•</span>
-      <span>© 2025 NextWave AI Suite</span>
+      <span>© 2025 NextWave AI Suite. All rights reserved.</span>
     </div>
   </footer>
 
   <script src="/app.js"></script>
+
+  <!-- Chatbot UI -->
+  <div id="wb-bot-panel">
+    <div id="wb-bot-head">Wealth Builder Help</div>
+    <div id="wb-bot-body"></div>
+    <div id="wb-bot-input">
+      <input id="wb-bot-text" class="input" placeholder="Ask a question…" />
+      <button class="btn" id="wb-bot-send">Send</button>
+    </div>
+  </div>
+  <button id="wb-bot-btn">?</button>
+  <script src="/bot.js"></script>
 </body>
 </html>
