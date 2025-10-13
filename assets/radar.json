@@ -1,6 +1,17 @@
 {
+  "version": 2,
   "max_actions_per_week": 2,
-  "monthly_extra_cap": 80,
-  "stress_threshold": 0.65,
-  "momentum_threshold": 0.6
+  "monthly_tilt_cap_dollars": 80,
+  "rules": [
+    {
+      "id": "vol_spike_safety_micro",
+      "when": { "indicator": "equity_volatility_5d", "op": ">", "value": 1.8 },
+      "action": { "sleeve": "safety", "add_dollars": 10, "rationale": "5-day equity vol spike → safety tilt" }
+    },
+    {
+      "id": "drawdown_buy_the_dip",
+      "when": { "indicator": "growth_drawdown_pct", "op": "<=", "value": -6 },
+      "action": { "sleeve": "growth", "add_dollars": 10, "cap_per_month": 40, "requires_user_btd_toggle": true, "rationale": "Growth dip ≥6% triggers small BTD" }
+    }
+  ]
 }
