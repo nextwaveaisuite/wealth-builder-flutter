@@ -4,9 +4,9 @@ monthly_tilt_cap_dollars: 80
 rules:
   - id: "vol_spike_safety_micro"
     when:
-      indicator: "equity_volatility_5d"   # computed front-end from close series
+      indicator: "equity_volatility_5d"
       op: ">"
-      value: 1.8                           # 5d stdev multiple vs 60d baseline
+      value: 1.8
     action:
       sleeve: "safety"
       add_dollars: 10
