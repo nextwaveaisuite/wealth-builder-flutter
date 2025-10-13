@@ -1,17 +1,6 @@
-// Live ETF quotes with 60s cache (Alpha Vantage if available; synthetic fallback)
-// Add env: ALPHA_VANTAGE_KEY (optional)
 const { promises: fs } = require('fs');
-
 const CACHE_PATH = '/tmp/quotes-cache.json';
 const TTL_MS = 60 * 1000;
-
-const MAP = {
-  "VAS.AX": { vendor: "ALPHA", symbol: "VAS.AX" },
-  "VGS.AX": { vendor: "ALPHA", symbol: "VGS.AX" },
-  "IVV.AX": { vendor: "ALPHA", symbol: "IVV.AX" },
-  "VAF.AX": { vendor: "ALPHA", symbol: "VAF.AX" },
-  "GOLD.AX": { vendor: "ALPHA", symbol: "GOLD.AX" }
-};
 
 async function readCache(){ try{ return JSON.parse(await fs.readFile(CACHE_PATH,'utf8')); }catch{ return { t:0, data:{} }; } }
 async function writeCache(cache){ try{ await fs.writeFile(CACHE_PATH, JSON.stringify(cache)); }catch{} }
@@ -34,7 +23,6 @@ async function fetchAlpha(symbol, key){
   }));
   return { vendor: "alpha", symbol, points };
 }
-
 function synthFallback(symbol){
   const now = new Date();
   const seed = symbol.split('').reduce((a,c)=>a+c.charCodeAt(0),0)%97;
@@ -60,20 +48,14 @@ module.exports = async (req, res) => {
 
     const cache = await readCache();
     const out = {};
-    for (const raw of list){
-      const meta = MAP[raw] || { vendor: key ? "ALPHA" : "FALLBACK", symbol: raw };
-      const ck = `${meta.vendor}:${meta.symbol}`;
-      const stillFresh = (Date.now() - (cache.t || 0) < TTL_MS) && cache.data[ck];
-      if (stillFresh) { out[raw] = cache.data[ck]; continue; }
-
+    for (const symbol of list){
+      const ck = symbol;
+      const fresh = (Date.now() - (cache.t || 0) < TTL_MS) && cache.data[ck];
+      if (fresh) { out[symbol] = cache.data[ck]; continue; }
       let series;
-      try {
-        if (meta.vendor === 'ALPHA' && key) series = await fetchAlpha(meta.symbol, key);
-        else throw new Error('no vendor');
-      } catch {
-        series = synthFallback(meta.symbol);
-      }
-      out[raw] = series;
+      try { if (key) series = await fetchAlpha(symbol, key); else throw new Error('no vendor'); }
+      catch { series = synthFallback(symbol); }
+      out[symbol] = series;
       cache.data[ck] = series;
     }
     cache.t = Date.now();
