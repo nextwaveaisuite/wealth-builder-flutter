@@ -1,0 +1,13 @@
+# Block legacy Now/Vercel configs and runtimes from being detected
+now.json
+**/now.json
+**/@now*
+**/now-*
+*.php
+**/*.php
+
+# Common noise
+node_modules/
+dist/
+build/
+.cache/
