@@ -8,7 +8,10 @@ module.exports = async (req, res) => {
     const { customerId } = req.body || {};
     if (!customerId) return res.status(400).json({ error:'customerId required' });
 
-    const site = process.env.SITE_URL || (req.headers['x-forwarded-proto'] ? `${req.headers['x-forwarded-proto']}://${req.headers['x-forwarded-host']}` : 'http://localhost:3000');
+    const proto = req.headers['x-forwarded-proto'] || 'https';
+    const host = req.headers['x-forwarded-host'] || req.headers.host;
+    const site = process.env.SITE_URL || `${proto}://${host}`;
+
     const portal = await stripe.billingPortal.sessions.create({
       customer: customerId,
       return_url: `${site}/#/settings`
