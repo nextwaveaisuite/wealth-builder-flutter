@@ -5,31 +5,32 @@
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>Wealth Builder</title>
 
-  <!-- Your existing stylesheet (unchanged) -->
   <link rel="stylesheet" href="./style.css"/>
-
-  <!-- (Optional) Favicons or meta remain as you have them -->
   <link rel="icon" href="./favicon.ico"/>
+
+  <!-- Chart.js (Phase 1 already used charts) -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 </head>
 <body>
   <header>
     <h1>Wealth Builder <span class="tm">™</span></h1>
-    <div class="governance">All providers governed equally · No favorites</div>
+    <div class="banner">All providers governed equally · No favorites</div>
   </header>
 
-  <!-- Keep your existing nav layout; this matches Phase 1 tabs -->
   <nav class="tabs">
-    <a href="#/">Home</a>
+    <a href="#/home">Home</a>
     <a href="#/portfolio">Portfolio</a>
     <a href="#/autopilot">Autopilot</a>
     <a href="#/execute">Execute</a>
     <a href="#/withdraw">Withdraw</a>
     <a href="#/holdings">Holdings</a>
     <a href="#/settings">Settings</a>
-    <a href="#/admin" class="admin-pill">Admin</a>
+    <a href="#/admin">Admin</a>
+    <a href="#/faq">FAQ</a>
+    <a href="#/billing">Billing</a>
   </nav>
 
-  <main id="content"></main>
+  <main id="app"></main>
 
   <footer>
     <div class="legal-links">
@@ -41,13 +42,13 @@
     <div class="disclaimer">General information only — not financial advice. We don’t hold funds or place orders.</div>
   </footer>
 
-  <!-- Your existing helper bot (unchanged) -->
+  <!-- Your existing helper bot (copy from old repo if you used it) -->
   <script src="./bot.js"></script>
 
-  <!-- Phase 2 headless helper (NO DOM/CSS changes). Load BEFORE app.js so app.js can call it. -->
+  <!-- Phase 2 helper: no DOM/CSS changes -->
   <script src="./js/phase2.js"></script>
 
-  <!-- Your application code (full file provided below) -->
+  <!-- Your SPA (Phase 1 + Phase 2 wiring). If you prefer your 504-line file, you can paste it instead. -->
   <script src="./app.js"></script>
 </body>
 </html>
