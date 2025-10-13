@@ -7,13 +7,17 @@
   <meta name="description" content="Rules-based micro-investing app for Australians. Safety floors, caps, Loss Guard.">
   <link rel="icon" href="/favicon.ico">
   <link rel="stylesheet" href="/style.css" />
+  <!-- Charts -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+  <!-- Supabase (future) -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
     window.SUPABASE_URL = "{{NEXT_PUBLIC_SUPABASE_URL}}";
     window.SUPABASE_ANON_KEY = "{{NEXT_PUBLIC_SUPABASE_ANON_KEY}}";
     window.supabase = supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
   </script>
+  <!-- jsPDF for PDF export -->
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 </head>
 <body>
   <header class="topbar">
@@ -66,4 +70,3 @@
   <script src="/bot.js"></script>
 </body>
 </html>
-
