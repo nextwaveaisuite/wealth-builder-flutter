@@ -1,34 +1,29 @@
 // /api/checkout.js
-// Creates a Stripe Checkout Session for SOFTWARE BILLING ONLY.
-// Env required: STRIPE_SECRET_KEY, STRIPE_PRICE_ID, SITE_URL
+export const config = { runtime: 'nodejs18.x' };
+import Stripe from 'stripe';
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: '2023-10-16' });
 
 export default async function handler(req, res) {
-  if (req.method !== 'POST') {
-    res.setHeader('Allow', 'POST');
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
-
-  const key = process.env.STRIPE_SECRET_KEY;
-  const price = process.env.STRIPE_PRICE_ID;
-  const site = process.env.SITE_URL || 'https://wealthbuilder.nextwaveaisuite.com';
-  if (!key || !price) return res.status(500).json({ error: 'Stripe env missing' });
-
-  const stripe = (await import('stripe')).default(key, { apiVersion: '2024-06-20' });
-
   try {
+    if (req.method !== 'POST') return res.status(405).end();
+    const { email, plan } = await req.json?.() ?? {};
+    const priceId = plan === 'lifetime' ? process.env.STRIPE_PRICE_ID_LIFETIME : process.env.STRIPE_PRICE_ID_MONTHLY;
+    if (!priceId) return res.status(400).json({ error: 'Missing price id' });
+
+    const site = process.env.SITE_URL || 'http://localhost:3000';
     const session = await stripe.checkout.sessions.create({
-      mode: 'subscription',
-      line_items: [{ price, quantity: 1 }],
-      // Pass session_id back so the client can verify status (no DB needed)
-      success_url: `${site}/#/settings?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${site}/#/billing`,
+      mode: plan === 'lifetime' ? 'payment' : 'subscription',
+      payment_method_types: ['card'],
+      customer_email: email || undefined,
+      line_items: [{ price: priceId, quantity: 1 }],
+      success_url: `${site}/#/pro/thanks?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${site}/#/billing/cancel`,
       allow_promotion_codes: true,
-      billing_address_collection: 'auto',
-      automatic_tax: { enabled: true },
+      client_reference_id: email || undefined
     });
-    return res.status(200).json({ url: session.url });
+    res.json({ url: session.url });
   } catch (e) {
-    console.error('Stripe error:', e);
-    return res.status(500).json({ error: e.message || 'Checkout failed' });
+    res.status(500).json({ error: e.message });
   }
 }
