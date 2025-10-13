@@ -1,5 +1,3 @@
-// Verify Checkout session & return status/email/customerId
-// Env: STRIPE_SECRET_KEY
 const Stripe = require('stripe');
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: '2023-10-16' });
 
