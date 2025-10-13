@@ -1,5 +1,3 @@
-// Stripe Billing Portal
-// Env: STRIPE_SECRET_KEY, SITE_URL (optional)
 const Stripe = require('stripe');
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: '2023-10-16' });
 
